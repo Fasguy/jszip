@@ -23,7 +23,7 @@
       "name": "yiminghe"
     }
   ],
-  "main": ".",
+  "main": "./lib/index",
   "browser": {
     "readable-stream": "./lib/readable-stream-browser.js",
     ".": "./dist/jszip.min.js"
