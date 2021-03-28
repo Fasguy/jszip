@@ -8,6 +8,12 @@ lovely and simple API.
 
 See https://stuk.github.io/jszip for all the documentation.
 
+## Fork Information
+In JSZip v3.2.0, the original setImmediate implementation was replaced by set-immediate-shim, which seemingly has immense performance issues. This fork was created to reimplement core-js' setImmediate implementation and restore the original performance from v3.1.5.
+It's basically a more up-to-date version of JSZip, with the performance benefits of v3.1.5.
+
+## Usage Example
+
 ```javascript
 var zip = new JSZip();
 
