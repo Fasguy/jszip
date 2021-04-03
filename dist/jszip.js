@@ -1631,6 +1631,50 @@ var out = {
     },
 
     /**
+     * Rename an entry inside the zip
+     * @param {string} from
+     * @param {string} to
+     * @returns {JSZip}
+     */
+    rename: function (from, to) {
+        from = this.root + from;
+        to = this.root + to;
+
+        var file = this.files[from];
+        if (!file) {
+            // Look for any folders
+            if (from.slice(-1) !== "/") {
+                from += "/";
+            }
+            if (to.slice(-1) !== "/") {
+                to += "/";
+            }
+            file = this.files[from];
+        }
+
+        if (file && !file.dir) {
+            // file
+            this.files[to] = this.files[from];
+            this.files[to].name = to;
+            delete this.files[from];
+        } else {
+            // maybe a folder, delete recursively
+            var kids = this.filter(function(relativePath, file) {
+                return file.name.slice(0, from.length) === from;
+            });
+            for (var i = 0; i < kids.length; i++) {
+                var newName = to + file.name.slice(from.length);
+                
+                this.files[newName] = this.files[kids[i].name];
+                this.files[newName].name = newName;
+                delete this.files[kids[i].name];
+            }
+        }
+
+        return this;
+    },
+
+    /**
      * Generate the complete zip file
      * @param {Object} options the options to generate the zip file :
      * - compression, "STORE" by default.

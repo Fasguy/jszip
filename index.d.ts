@@ -216,6 +216,14 @@ interface JSZip {
     remove(path: string): JSZip;
 
     /**
+     * Rename an entry inside the zip
+     * @param {string} from
+     * @param {string} to
+     * @returns {JSZip}
+     */
+    rename(from: string, to: string): JSZip;
+
+    /**
      * Generates a new archive asynchronously
      *
      * @param options Optional options for the generator
