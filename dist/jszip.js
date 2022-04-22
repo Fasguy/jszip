@@ -1,13 +1,13 @@
 /*!
 
-JSZip v3.7.1 - A JavaScript class for generating and reading zip files
+JSZip v3.9.1 - A JavaScript class for generating and reading zip files
 <http://stuartk.com/jszip>
 
 (c) 2009-2016 Stuart Knightley <stuart [at] stuartk.com>
-Dual licenced under the MIT license or GPLv3. See https://raw.github.com/Stuk/jszip/master/LICENSE.markdown.
+Dual licenced under the MIT license or GPLv3. See https://raw.github.com/Stuk/jszip/main/LICENSE.markdown.
 
 JSZip uses the library pako released under the MIT license :
-https://github.com/nodeca/pako/blob/master/LICENSE
+https://github.com/nodeca/pako/blob/main/LICENSE
 */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.JSZip = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
@@ -1059,7 +1059,7 @@ JSZip.defaults = require('./defaults');
 
 // TODO find a better way to handle this version,
 // a require('package.json').version doesn't work with webpack, see #327
-JSZip.version = "3.7.1";
+JSZip.version = "3.9.1";
 
 JSZip.loadAsync = function (content, options) {
     return new JSZip().loadAsync(content, options);
@@ -1132,7 +1132,11 @@ module.exports = function (data, options) {
             var files = zipEntries.files;
             for (var i = 0; i < files.length; i++) {
                 var input = files[i];
-                zip.file(input.fileNameStr, input.decompressed, {
+
+                var unsafeName = input.fileNameStr;
+                var safeName = utils.resolve(input.fileNameStr);
+
+                zip.file(safeName, input.decompressed, {
                     binary: true,
                     optimizedBinaryString: true,
                     date: input.date,
@@ -1142,6 +1146,9 @@ module.exports = function (data, options) {
                     dosPermissions: input.dosPermissions,
                     createFolders: options.createFolders
                 });
+                if (!input.dir) {
+                    zip.file(safeName).unsafeOriginalName = unsafeName;
+                }
             }
             if (zipEntries.zipComment.length) {
                 zip.comment = zipEntries.zipComment;
@@ -3546,6 +3553,31 @@ exports.transformTo = function(outputType, input) {
 };
 
 /**
+ * Resolve all relative path components, "." and "..", in a path. If these relative components
+ * traverse above the root then the resulting path will only contain the final path component.
+ *
+ * All empty components, e.g. "//", are removed.
+ * @param {string} path A path with / or \ separators
+ * @returns {string} The path with all relative path components resolved.
+ */
+exports.resolve = function(path) {
+    var parts = path.split("/");
+    var result = [];
+    for (var index = 0; index < parts.length; index++) {
+        var part = parts[index];
+        // Allow the first and last component to be empty for trailing slashes.
+        if (part === "." || (part === "" && index !== 0 && index !== parts.length - 1)) {
+            continue;
+        } else if (part === "..") {
+            result.pop();
+        } else {
+            result.push(part);
+        }
+    }
+    return result.join("/");
+};
+
+/**
  * Return the type of the input.
  * The type will be in a format valid for JSZip.utils.transformTo : string, array, uint8array, arraybuffer.
  * @param {Object} input the input to identify.
@@ -3653,8 +3685,8 @@ exports.prepareContent = function(name, inputData, isBinary, isOptimizedBinarySt
 
     // if inputData is already a promise, this flatten it.
     var promise = external.Promise.resolve(inputData).then(function(data) {
-        
-        
+
+
         var isBlob = support.blob && (data instanceof Blob || ['[object File]', '[object Blob]'].indexOf(Object.prototype.toString.call(data)) !== -1);
 
         if (isBlob && typeof FileReader !== "undefined") {
