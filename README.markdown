@@ -8,6 +8,7 @@ See https://stuk.github.io/jszip for all the documentation.
 
 ## Fork Information
 This fork is officially obsolete. JSZip's setImmediate implementation was fixed in v3.10.0.
+
 ~~In JSZip v3.2.0, the original setImmediate implementation was replaced by set-immediate-shim, which seemingly has immense performance issues. This fork was created to reimplement core-js' setImmediate implementation and restore the original performance from v3.1.5.
 It's basically a more up-to-date version of JSZip, with the performance benefits of v3.1.5.~~
 
